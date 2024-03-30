@@ -1,0 +1,65 @@
+# Read in March 30 data (day of X class flare
+Mar30fn <- "C:\\Documents\\HAMSCIData\\WSPR data\\WSPR2022v3-control\\Mar30.csv"
+Mar30 <- read.csv(Mar30fn)
+names(Mar30) <- c("Datetime", "Tcall", "Tgrid", "Tlat", "Tlang", "Tgridsrc", "Rcall", "Rgrid", "Rlat", "Rlon", "Rgridsrc", "Freq", "SNR", "Mode","x1","x2","x3","x4","TG04","RG04")
+Mar30$hr <- as.numeric(substring(Mar30$Datetime, nchar(Mar30$Datetime)-7, nchar(Mar30$Datetime)-6))
+Mar30SNRbyHR <- aggregate(Mar30$SNR, list(Mar30$hr), FUN = mean)
+
+# Line of Sight
+Mar30LT100m <- Mar30[Mar30$x2 >1 & Mar30$x2 <100,]
+Mar30LT100m$dt <- "Mar30"
+# NVIS 100 to 500 miles
+Mar30LT500m <- Mar30[Mar30$x2 >100 & Mar30$x2 < 500,]
+Mar30LT500m$dt <- "Mar30"
+# E-layer 500 to 1500 miles
+Mar30LT1500m <- Mar30[Mar30$x2 >500 & Mar30$x2 < 1500,]
+Mar30LT1500m$dt <- "Mar30"
+# F-layer over 1500 miles
+Mar30GT1500m <- Mar30[Mar30$x2 > 1500,]
+Mar30GT1500m$dt <- "Mar30"
+
+# Average SNR by hour, categorized by distance beween transmitter and receiver
+Mar30LT100mSNRbyHR <- aggregate(Mar30LT100m$SNR, list(Mar30LT100m$hr), FUN = mean)
+names(Mar30LT100mSNRbyHR) <- c("Hour", "AvgSNR")
+Mar30LT500mSNRbyHR <- aggregate(Mar30LT500m$SNR, list(Mar30LT500m$hr), FUN = mean)
+names(Mar30LT500mSNRbyHR) <- c("Hour", "AvgSNR") 
+Mar30LT1500mSNRbyHR <- aggregate(Mar30LT1500m$SNR, list(Mar30LT1500m$hr), FUN = mean)
+names(Mar30LT1500mSNRbyHR) <- c("Hour", "AvgSNR") 
+Mar30GT1500mSNRbyHR <- aggregate(Mar30GT1500m$SNR, list(Mar30GT1500m$hr), FUN = mean)
+names(Mar30GT1500mSNRbyHR) <- c("Hour", "AvgSNR") 
+
+# Add date of observation, to allow comparison in ggplot
+Mar30LT100mSNRbyHR$dt <- "Mar30"
+Mar30LT500mSNRbyHR$dt <- "Mar30" 
+Mar30LT1500mSNRbyHR$dt <- "Mar30"
+Mar30GT1500mSNRbyHR$dt <- "Mar30" 
+
+
+
+Mar30COUNTbyHR <- aggregate(Mar30$hr, list(Mar30$hr), FUN = length)
+Mar30COUNTbyHR$dt <- "Mar30"
+names(Mar30COUNTbyHR) <- c("Hour", "Reports","dt")
+Mar31COUNTbyHR <- aggregate(Mar31$hr, list(Mar31$hr), FUN = length)
+Mar31COUNTbyHR$dt <- "Mar31"
+names(Mar31COUNTbyHR) <- c("Hour", "Reports","dt")
+AllCOUNTbyHR <- rbind(Mar29COUNTbyHR, Mar30COUNTbyHR, Mar31COUNTbyHR)
+
+ggplot(data=AllCOUNTbyHR , aes(x=Hour, y=AvgSNR, group=dt, colour=factor(dt))) + geom_line(size=.75) + geom_point() + geom_vline(xintercept=17.3)
+
+Mar30DISTbyHR <- aggregate(Mar30$x2, list(Mar30$hr), FUN = mean)
+Mar30DISTbyHR$dt <- "Mar30"
+names(Mar30DISTbyHR) <- c("Hour", "Reports","dt")
+Mar31DISTbyHR <- aggregate(Mar31$x2, list(Mar31$hr), FUN = mean)
+Mar31DISTbyHR$dt <- "Mar31"
+names(Mar31DISTbyHR) <- c("Hour", "Reports","dt")
+Mar29DISTbyHR <- aggregate(Mar29$x2, list(Mar29$hr), FUN = mean)
+Mar29DISTbyHR$dt <- "Mar29"
+names(Mar29DISTbyHR) <- c("Hour", "Reports","dt")
+AllDISTbyHR <- rbind(Mar29DISTbyHR, Mar30DISTbyHR, Mar31DISTbyHR)
+
+names(Mar29DISTbyHR) <- c("Hour", "AvgDist","dt")
+names(Mar30DISTbyHR) <- c("Hour", "AvgDist","dt")
+names(Mar31DISTbyHR) <- c("Hour", "AvgDist","dt")
+AllDISTbyHR <- rbind(Mar29DISTbyHR, Mar30DISTbyHR, Mar31DISTbyHR)
+ggplot(data=AllDISTbyHR , aes(x=Hour, y=AvgDist, group=dt, colour=factor(dt))) + geom_line(size=.75) + geom_point() + geom_vline(xintercept=17.3)
+
